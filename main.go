@@ -9,14 +9,11 @@ import (
 )
 
 func main() {
-	initialize()
-	telegram.Start(os.Getenv(constants.TELEGRAM_TOKEN))
-}
-
-func initialize() {
 	err := godotenv.Load()
 
 	if err != nil {
 		panic("Error loading .env file")
 	}
+
+	telegram.Start(os.Getenv(constants.TELEGRAM_TOKEN))
 }
