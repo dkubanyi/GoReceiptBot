@@ -1,6 +1,9 @@
 package telegram
 
-import "errors"
+import (
+	"errors"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
 
 type ResponseHandler interface {
 	isResponsible() bool
@@ -8,10 +11,10 @@ type ResponseHandler interface {
 	getResponseMessage() string
 }
 
-func InitHandler(msg string) (ResponseHandler, error) {
+func InitHandler(message *tgbotapi.Message) (ResponseHandler, error) {
 	handlers := []ResponseHandler{
-		startHandler{msgReceived: msg},
-		testHandler{msgReceived: msg},
+		startHandler{text: message.Text},
+		imageHandler{text: message.Text, image: message.Photo},
 	}
 
 	for _, h := range handlers {
@@ -24,11 +27,11 @@ func InitHandler(msg string) (ResponseHandler, error) {
 }
 
 type startHandler struct {
-	msgReceived string
+	text string
 }
 
 func (h startHandler) isResponsible() bool {
-	return h.msgReceived == "/start"
+	return h.text == "/start"
 }
 
 func (h startHandler) process() {
@@ -39,18 +42,18 @@ func (h startHandler) getResponseMessage() string {
 	return defaultMessage
 }
 
-type testHandler struct {
-	msgReceived string
+type imageHandler struct {
+	text  string
+	image []tgbotapi.PhotoSize
 }
 
-func (h testHandler) isResponsible() bool {
-	return h.msgReceived == "/end"
+func (h imageHandler) isResponsible() bool {
+	return len(h.image) != 0
 }
 
-func (h testHandler) process() {
-	// TODO save into DB, etc
+func (h imageHandler) process() {
 }
 
-func (h testHandler) getResponseMessage() string {
+func (h imageHandler) getResponseMessage() string {
 	return "bye bye!"
 }

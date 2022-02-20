@@ -47,7 +47,7 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		fmt.Printf("Received message : " + update.Message.Text)
 
-		handler, err := InitHandler(update.Message.Text)
+		handler, err := InitHandler(update.Message)
 
 		var responseMessage string
 
