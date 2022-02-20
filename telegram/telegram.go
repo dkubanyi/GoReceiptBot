@@ -2,13 +2,14 @@ package telegram
 
 import (
 	"GoBudgetBot/constants"
+	"GoBudgetBot/telegram/handlers"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
 
 const (
-	defaultMessage = "Welcome to BudgetBot. Try one of the following commands:\n" +
+	DefaultMessage = "Welcome to BudgetBot. Try one of the following commands:\n" +
 		"/start --> display this message"
 	unrecognizedCommand = "Unrecognized command, please try again"
 )
@@ -47,15 +48,15 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		fmt.Printf("Received message : " + update.Message.Text)
 
-		handler, err := InitHandler(update.Message)
+		handler, err := handlers.InitHandler(update.Message)
 
 		var responseMessage string
 
 		if err != nil {
 			responseMessage = unrecognizedCommand
 		} else {
-			handler.process()
-			responseMessage = handler.getResponseMessage()
+			handler.Process()
+			responseMessage = handler.GetResponseMessage()
 		}
 
 		response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMessage)
