@@ -1,7 +1,5 @@
 package handlers
 
-import "GoBudgetBot/telegram"
-
 /**
 * This handler is responsible for handling the initial "/start" command
  */
@@ -18,5 +16,5 @@ func (h startHandler) Process() {
 }
 
 func (h startHandler) GetResponseMessage() string {
-	return telegram.DefaultMessage
+	return defaultMessage
 }

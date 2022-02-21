@@ -1,5 +1,5 @@
 package constants
 
 const (
-	TELEGRAM_TOKEN = "TELEGRAM_TOKEN"
+	TelegramToken = "TELEGRAM_TOKEN"
 )

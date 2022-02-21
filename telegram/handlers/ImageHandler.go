@@ -18,5 +18,5 @@ func (h imageHandler) Process() {
 }
 
 func (h imageHandler) GetResponseMessage() string {
-	return "bye bye!"
+	return defaultMessage
 }

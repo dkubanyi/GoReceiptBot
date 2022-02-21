@@ -20,5 +20,5 @@ func main() {
 	db := entities.CreateConnection()
 	defer db.Close()
 
-	telegram.Start(os.Getenv(constants.TELEGRAM_TOKEN))
+	telegram.Start(os.Getenv(constants.TelegramToken))
 }

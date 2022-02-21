@@ -2,21 +2,21 @@ package telegram
 
 import (
 	"GoBudgetBot/constants"
+	"GoBudgetBot/persistence/entities/user"
 	"GoBudgetBot/telegram/handlers"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"strconv"
 )
 
 const (
-	DefaultMessage = "Welcome to BudgetBot. Try one of the following commands:\n" +
-		"/start --> display this message"
 	unrecognizedCommand = "Unrecognized command, please try again"
 )
 
 func Start(t string) {
 	if len(t) == 0 {
-		panic(fmt.Sprintf("Parameter %s is required, but was not passed", constants.TELEGRAM_TOKEN))
+		panic(fmt.Sprintf("Parameter %s is required, but was not passed", constants.TelegramToken))
 	}
 
 	bot, err := tgbotapi.NewBotAPI(t)
@@ -48,7 +48,26 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		fmt.Printf("Received message : " + update.Message.Text)
 
-		handler, err := handlers.InitHandler(update.Message)
+		// user
+		// update.Message.MessageID
+		// update.Message.From
+		// update.Message.From.UserName
+		// update.Message.From.FirstName
+		// update.Message.From.LastName
+		// update.Chat.ID
+		// update.Chat.UserName
+		// update.Chat.FirstName
+		// update.Chat.LastName
+
+		u, err := user.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
+		_ = u
+
+		if err != nil {
+			// user does not exist
+			user.Create(user.FromMessage(update.Message))
+		}
+
+		handler, err := handlers.InitHandler(update.Message, u)
 
 		var responseMessage string
 
