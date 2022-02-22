@@ -20,9 +20,9 @@ type ResponseHandler interface {
 
 func InitHandler(message *tgbotapi.Message, u user.User) (ResponseHandler, error) {
 	handlers := []ResponseHandler{
-		startHandler{text: message.Text},
-		imageHandler{text: message.Text, image: message.Photo},
-		userHandler{
+		&startHandler{text: message.Text},
+		&imageHandler{text: message.Text, image: message.Photo},
+		&userHandler{
 			text:         message.Text,
 			telegramUser: u,
 		},

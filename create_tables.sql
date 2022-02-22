@@ -9,3 +9,5 @@ CREATE TABLE "public"."users"
     "last_name"  varchar(255),
     PRIMARY KEY ("id")
 );
+
+CREATE UNIQUE INDEX "public"."idx_user_id_chat_id" ON users (user_id, chat_id);

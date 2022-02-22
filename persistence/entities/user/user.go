@@ -9,15 +9,18 @@ import (
 	"github.com/google/uuid"
 	"log"
 	"strconv"
+	"time"
 )
 
 type User struct {
-	Id        string `json:"id"`
-	UserId    string `json:"userId"`
-	ChatId    string `json:"chatId"`
-	Username  string `json:"username"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	Id        uuid.UUID `json:"id"`
+	UserId    string    `json:"userId"`
+	ChatId    string    `json:"chatId"`
+	Username  string    `json:"username"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func FromMessage(update *tgbotapi.Message) User {
@@ -65,7 +68,7 @@ func GetByUserIdAndChatId(userId string, chatId string) (User, error) {
 	var user User
 
 	row := db.QueryRow(`SELECT * FROM users WHERE user_id = $1 AND chat_id = $2`, userId, chatId)
-	err := row.Scan(&user.Id, &user.UserId, &user.ChatId, &user.Username, &user.FirstName, &user.LastName)
+	err := row.Scan(&user.Id, &user.UserId, &user.ChatId, &user.Username, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -82,9 +85,19 @@ func Create(user User) (string, error) {
 	defer db.Close()
 
 	var id string
-	sqlStatement := "INSERT INTO users (id, user_id, chat_id, username, first_name, last_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id"
+	sqlStatement := "INSERT INTO users (id, user_id, chat_id, username, first_name, last_name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id"
 
-	err := db.QueryRow(sqlStatement, uuid.New(), user.UserId, user.ChatId, user.Username, user.FirstName, user.LastName).Scan(&id)
+	err := db.QueryRow(
+		sqlStatement,
+		uuid.New(),
+		user.UserId,
+		user.ChatId,
+		user.Username,
+		user.FirstName,
+		user.LastName,
+		time.Now(),
+		time.Now(),
+	).Scan(&id)
 
 	if err != nil {
 		log.Fatalf("Unable to execute the query. %v", err)
