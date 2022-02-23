@@ -76,11 +76,16 @@ func (h *imageHandler) Process() {
 
 	n, err := filepath.Abs(img.Name())
 
-	file, _ := recognizeFile(n)
+	file, err := recognizeFile(n)
+
+	if err != nil {
+		h.parsedQrString = err.Error()
+		return
+	}
 
 	responseStr := "Your receipt contains the following items:\n"
 	for _, item := range file.Receipt.Items {
-		responseStr += fmt.Sprintf("*Item*: %s\n*Item type*: %s\n*Quantity*: %d pcs\n*VAT*: %d\n*Price*: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
+		responseStr += fmt.Sprintf("<b>Item</b>: %s\n<b>Item type</b>: %s\n<b>Quantity</b>: %d pcs\n<b>VAT</b>: %d\n<b>Price</b>: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
 	}
 
 	responseStr += "\n That's all 😊"
@@ -94,7 +99,7 @@ func (h *imageHandler) GetResponseMessage() string {
 	if len(h.parsedQrString) == 0 {
 		msg = fmt.Sprintf("No QR code detected on the image. Please make sure it is well visible on the uploaded photo, and try again.")
 	} else {
-		msg = fmt.Sprintf("Parsed QR text: %s. URL of the photo on Telegram's servers: %s", h.parsedQrString, h.photoUrl)
+		msg = fmt.Sprintf("Result: %s. URL of the photo on Telegram's servers: %s", h.parsedQrString, h.photoUrl)
 	}
 
 	// TODO process the photo, e.g. if it is a QR code of a payment, parse it and save in DB
@@ -108,7 +113,7 @@ func recognizeFile(path string) (*entities.FinancnaSpravaResponse, error) {
 
 	if img == nil {
 		log.Println("Could not decode image")
-		return nil, errors.New("Could not decode image")
+		return nil, errors.New("could not decode image")
 	}
 
 	// prepare BinaryBitmap
@@ -125,6 +130,11 @@ func recognizeFile(path string) (*entities.FinancnaSpravaResponse, error) {
 	receipt, err := verifyReceipt(result.GetText())
 	if err != nil {
 		return nil, err
+	}
+
+	if receipt.Receipt.ReceiptID == "" {
+		// not a valid receipt
+		return nil, errors.New("receipt not recognized by Financna sprava")
 	}
 
 	return receipt, nil

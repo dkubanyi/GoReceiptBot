@@ -25,7 +25,7 @@ func Start(t string) {
 	}
 
 	// set to true if you want to see update information (messages received in Telegram) in console
-	bot.Debug = false
+	bot.Debug = true
 
 	listen(bot)
 
@@ -68,7 +68,7 @@ func listen(botapi *tgbotapi.BotAPI) {
 		}
 
 		response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMessage)
-		//response.ParseMode = "Markdown"
+		response.ParseMode = tgbotapi.ModeHTML
 		response.ReplyToMessageID = update.Message.MessageID
 		response.ReplyMarkup = tgbotapi.NewReplyKeyboard(
 			tgbotapi.NewKeyboardButtonRow(
