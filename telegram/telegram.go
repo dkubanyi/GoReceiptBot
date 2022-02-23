@@ -48,19 +48,7 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		fmt.Printf("Received message : " + update.Message.Text)
 
-		// user
-		// update.Message.MessageID
-		// update.Message.From
-		// update.Message.From.UserName
-		// update.Message.From.FirstName
-		// update.Message.From.LastName
-		// update.Chat.ID
-		// update.Chat.UserName
-		// update.Chat.FirstName
-		// update.Chat.LastName
-
 		u, err := user.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
-		_ = u
 
 		if err != nil {
 			// user does not exist
