@@ -1,7 +1,7 @@
 package user
 
 import (
-	"GoBudgetBot/persistence/entities"
+	"GoBudgetBot/models/entities"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -80,7 +80,7 @@ func GetByUserIdAndChatId(userId string, chatId string) (User, error) {
 	}
 }
 
-func Create(user User) (string, error) {
+func Create(user User) (User, error) {
 	db := entities.CreateConnection()
 	defer db.Close()
 
@@ -104,5 +104,20 @@ func Create(user User) (string, error) {
 	}
 
 	log.Printf("Inserted new user with user_id %v", id)
-	return id, nil
+	return GetByUserIdAndChatId(user.UserId, user.ChatId)
+}
+
+func DeleteById(uuid uuid.UUID) (bool, error) {
+	db := entities.CreateConnection()
+	defer db.Close()
+
+	sqlStatement := "DELETE FROM users WHERE id=$1"
+
+	_, err := db.Exec(sqlStatement, uuid)
+
+	if err != nil {
+		return false, errors.New(fmt.Sprintf("Unable to execute query. %v", err))
+	}
+
+	return true, nil
 }

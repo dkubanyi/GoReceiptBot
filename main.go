@@ -2,7 +2,7 @@ package main
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/persistence/entities"
+	"GoBudgetBot/models/entities"
 	"GoBudgetBot/telegram"
 	"os"
 

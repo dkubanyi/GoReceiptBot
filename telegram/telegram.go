@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/persistence/entities/user"
+	"GoBudgetBot/models/entities/user"
 	"GoBudgetBot/telegram/handlers"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -42,8 +42,8 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 	for update := range updates {
 		if update.Message == nil {
-			log.Fatal("Received nil message")
-			return
+			log.Println("Received nil message")
+			continue
 		}
 
 		fmt.Printf("Received message : " + update.Message.Text)
@@ -52,7 +52,7 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		if err != nil {
 			// user does not exist
-			user.Create(user.FromMessage(update.Message))
+			u, _ = user.Create(user.FromMessage(update.Message))
 		}
 
 		handler, err := handlers.InitHandler(update.Message, u)
@@ -68,6 +68,14 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMessage)
 		response.ReplyToMessageID = update.Message.MessageID
+		response.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton(handlers.CommandStart),
+				tgbotapi.NewKeyboardButton(handlers.CommandMe),
+				tgbotapi.NewKeyboardButton(handlers.CommandDeleteMe),
+			),
+		)
+
 		_, _ = botapi.Send(response)
 	}
 }
