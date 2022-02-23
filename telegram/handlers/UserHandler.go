@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"GoBudgetBot/models/entities/user"
+	"GoBudgetBot/models/entities"
 	"fmt"
 )
 
@@ -10,7 +10,7 @@ import (
  */
 type userHandler struct {
 	text string
-	user user.User
+	user entities.User
 }
 
 func (h *userHandler) IsResponsible() bool {
@@ -19,7 +19,7 @@ func (h *userHandler) IsResponsible() bool {
 
 func (h *userHandler) Process() {
 	if h.text == CommandDeleteMe {
-		user.DeleteById(h.user.Id)
+		entities.DeleteById(h.user.Id)
 	}
 }
 

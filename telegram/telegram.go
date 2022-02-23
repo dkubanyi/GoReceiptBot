@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/models/entities/user"
+	"GoBudgetBot/models/entities"
 	"GoBudgetBot/telegram/handlers"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -24,7 +24,8 @@ func Start(t string) {
 		log.Panic(err)
 	}
 
-	bot.Debug = true
+	// set to true if you want to see update information (messages received in Telegram) in console
+	bot.Debug = false
 
 	listen(bot)
 
@@ -46,13 +47,13 @@ func listen(botapi *tgbotapi.BotAPI) {
 			continue
 		}
 
-		fmt.Printf("Received message : " + update.Message.Text)
+		//fmt.Printf("Received message : " + update.Message.Text)
 
-		u, err := user.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
+		u, err := entities.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
 
 		if err != nil {
 			// user does not exist
-			u, _ = user.Create(user.FromMessage(update.Message))
+			u, _ = entities.Create(entities.FromMessage(update.Message))
 		}
 
 		handler, err := handlers.InitHandler(update.Message, u)
@@ -67,6 +68,7 @@ func listen(botapi *tgbotapi.BotAPI) {
 		}
 
 		response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMessage)
+		//response.ParseMode = "Markdown"
 		response.ReplyToMessageID = update.Message.MessageID
 		response.ReplyMarkup = tgbotapi.NewReplyKeyboard(
 			tgbotapi.NewKeyboardButtonRow(

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"GoBudgetBot/models/entities/user"
+	"GoBudgetBot/models/entities"
 	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -24,7 +24,7 @@ type ResponseHandler interface {
 	GetResponseMessage() string
 }
 
-func InitHandler(message *tgbotapi.Message, u user.User) (ResponseHandler, error) {
+func InitHandler(message *tgbotapi.Message, u entities.User) (ResponseHandler, error) {
 	handlers := []ResponseHandler{
 		&startHandler{text: message.Text},
 		&imageHandler{text: message.Text, image: message.Photo},

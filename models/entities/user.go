@@ -1,7 +1,6 @@
-package user
+package entities
 
 import (
-	"GoBudgetBot/models/entities"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -34,7 +33,7 @@ func FromMessage(update *tgbotapi.Message) User {
 }
 
 func Listing() ([]User, error) {
-	db := entities.CreateConnection()
+	db := CreateConnection()
 	defer db.Close()
 
 	var users []User
@@ -63,7 +62,7 @@ func Listing() ([]User, error) {
 }
 
 func GetByUserIdAndChatId(userId string, chatId string) (User, error) {
-	db := entities.CreateConnection()
+	db := CreateConnection()
 	defer db.Close()
 	var user User
 
@@ -81,7 +80,7 @@ func GetByUserIdAndChatId(userId string, chatId string) (User, error) {
 }
 
 func Create(user User) (User, error) {
-	db := entities.CreateConnection()
+	db := CreateConnection()
 	defer db.Close()
 
 	var id string
@@ -108,7 +107,7 @@ func Create(user User) (User, error) {
 }
 
 func DeleteById(uuid uuid.UUID) (bool, error) {
-	db := entities.CreateConnection()
+	db := CreateConnection()
 	defer db.Close()
 
 	sqlStatement := "DELETE FROM users WHERE id=$1"

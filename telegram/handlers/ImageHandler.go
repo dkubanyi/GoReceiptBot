@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"GoBudgetBot/constants"
+	"GoBudgetBot/models/entities"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/makiuchi-d/gozxing"
@@ -53,7 +55,7 @@ func (h *imageHandler) Process() {
 		return
 	}
 
-	tgResponse := new(TelegramResponse)
+	tgResponse := new(entities.TelegramResponse)
 	err = json.NewDecoder(bytes.NewReader(body)).Decode(&tgResponse)
 	if err != nil {
 		log.Fatal(err)
@@ -73,7 +75,17 @@ func (h *imageHandler) Process() {
 	io.Copy(img, r.Body)
 
 	n, err := filepath.Abs(img.Name())
-	h.parsedQrString = recognizeFile(n)
+
+	file, _ := recognizeFile(n)
+
+	responseStr := "Your receipt contains the following items:\n"
+	for _, item := range file.Receipt.Items {
+		responseStr += fmt.Sprintf("*Item*: %s\n*Item type*: %s\n*Quantity*: %d pcs\n*VAT*: %d\n*Price*: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
+	}
+
+	responseStr += "\n That's all 😊"
+
+	h.parsedQrString = responseStr
 }
 
 func (h *imageHandler) GetResponseMessage() string {
@@ -89,15 +101,14 @@ func (h *imageHandler) GetResponseMessage() string {
 	return msg
 }
 
-func recognizeFile(path string) string {
-
+func recognizeFile(path string) (*entities.FinancnaSpravaResponse, error) {
 	// open and decode image file
 	file, _ := os.Open(path)
 	img, _, _ := image.Decode(file)
 
 	if img == nil {
 		log.Println("Could not decode image")
-		return ""
+		return nil, errors.New("Could not decode image")
 	}
 
 	// prepare BinaryBitmap
@@ -108,19 +119,44 @@ func recognizeFile(path string) string {
 	result, err := qrReader.Decode(bmp, nil)
 
 	if err != nil {
-		log.Println(err)
-		return ""
+		return nil, err
 	}
 
-	return result.GetText()
+	receipt, err := verifyReceipt(result.GetText())
+	if err != nil {
+		return nil, err
+	}
+
+	return receipt, nil
 }
 
-type TelegramResponse struct {
-	Ok     bool `json:"ok"`
-	Result struct {
-		FileID       string `json:"file_id"`
-		FileUniqueID string `json:"file_unique_id"`
-		FileSize     int    `json:"file_size"`
-		FilePath     string `json:"file_path"`
-	} `json:"result"`
+// PrettyPrint to print struct in a readable way
+func PrettyPrint(i interface{}) string {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	return string(s)
+}
+
+func verifyReceipt(receiptCode string) (*entities.FinancnaSpravaResponse, error) {
+	// request financna sprava
+	finspravaUrl := "https://ekasa.financnasprava.sk/mdu/api/v1/opd/receipt/find"
+
+	req, err := http.NewRequest("POST", finspravaUrl, bytes.NewBuffer([]byte(fmt.Sprintf(`{"receiptId": "%s"}`, receiptCode))))
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Request to Financna sprava failed: %s", err))
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var response entities.FinancnaSpravaResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		fmt.Println("Cannot unmarshal JSON")
+	}
+
+	return &response, nil
 }
