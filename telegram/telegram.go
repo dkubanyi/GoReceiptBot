@@ -47,13 +47,11 @@ func listen(botapi *tgbotapi.BotAPI) {
 			continue
 		}
 
-		//fmt.Printf("Received message : " + update.Message.Text)
-
 		u, err := entities.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
 
 		if err != nil {
 			// user does not exist
-			u, _ = entities.Create(entities.FromMessage(update.Message))
+			u, _ = entities.CreateUser(entities.FromMessage(update.Message))
 		}
 
 		handler, err := handlers.InitHandler(update.Message, u)

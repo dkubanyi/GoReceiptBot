@@ -91,6 +91,12 @@ func (h *imageHandler) Process() {
 	responseStr += "\n That's all 😊"
 
 	h.parsedQrString = responseStr
+
+	// check if receipt_id already exists in db, if yes, return a message that it exists
+
+	// if it doesn't yet exist in db, persist in db
+	entities.CreateReceipt(file.Receipt)
+
 }
 
 func (h *imageHandler) GetResponseMessage() string {
@@ -132,18 +138,12 @@ func recognizeFile(path string) (*entities.FinancnaSpravaResponse, error) {
 		return nil, err
 	}
 
-	if receipt.Receipt.ReceiptID == "" {
+	if receipt.Receipt.ReceiptId == "" {
 		// not a valid receipt
 		return nil, errors.New("receipt not recognized by Financna sprava")
 	}
 
 	return receipt, nil
-}
-
-// PrettyPrint to print struct in a readable way
-func PrettyPrint(i interface{}) string {
-	s, _ := json.MarshalIndent(i, "", "\t")
-	return string(s)
 }
 
 func verifyReceipt(receiptCode string) (*entities.FinancnaSpravaResponse, error) {
@@ -165,7 +165,7 @@ func verifyReceipt(receiptCode string) (*entities.FinancnaSpravaResponse, error)
 
 	var response entities.FinancnaSpravaResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		fmt.Println("Cannot unmarshal JSON")
+		return nil, errors.New("cannot unmarshal JSON")
 	}
 
 	return &response, nil

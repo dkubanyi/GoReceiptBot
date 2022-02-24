@@ -32,7 +32,7 @@ func FromMessage(update *tgbotapi.Message) User {
 	}
 }
 
-func Listing() ([]User, error) {
+func ListUsers() ([]User, error) {
 	db := CreateConnection()
 	defer db.Close()
 
@@ -79,7 +79,7 @@ func GetByUserIdAndChatId(userId string, chatId string) (User, error) {
 	}
 }
 
-func Create(user User) (User, error) {
+func CreateUser(user User) (User, error) {
 	db := CreateConnection()
 	defer db.Close()
 
@@ -106,7 +106,7 @@ func Create(user User) (User, error) {
 	return GetByUserIdAndChatId(user.UserId, user.ChatId)
 }
 
-func DeleteById(uuid uuid.UUID) (bool, error) {
+func DeleteUserById(uuid uuid.UUID) (bool, error) {
 	db := CreateConnection()
 	defer db.Close()
 

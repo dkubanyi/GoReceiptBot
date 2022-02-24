@@ -19,7 +19,7 @@ func (h *userHandler) IsResponsible() bool {
 
 func (h *userHandler) Process() {
 	if h.text == CommandDeleteMe {
-		entities.DeleteById(h.user.Id)
+		entities.DeleteUserById(h.user.Id)
 	}
 }
 
