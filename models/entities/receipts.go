@@ -2,6 +2,7 @@ package entities
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -90,6 +91,7 @@ func GetReceiptByReceiptId(receiptId string) (Receipt, error) {
 	var r Receipt
 
 	row := db.QueryRow(`SELECT * FROM receipts WHERE receipt_id = $1`, receiptId)
+
 	err := row.Scan(
 		&r.Id,
 		&r.ReceiptId,
@@ -108,10 +110,11 @@ func GetReceiptByReceiptId(receiptId string) (Receipt, error) {
 		&r.VatRateBasic,
 		&r.VatRateReduced,
 		&r.Exemption,
-		//&r.IssueDate, // convert to string?
-		//&r.CreateDate, // convert to string?
-		//&r.Organization, // convert from json
-		//&r.Items, // convert from json
+		&r.IssueDate,
+		&r.CreateDate,
+		&r.Unit,
+		"{}", //&r.Organization, //&r.Organization, // convert from json
+		"{}", //&r.Items,        //&r.Items,        // convert from json
 	)
 
 	switch err {
@@ -129,10 +132,16 @@ func CreateReceipt(r Receipt) (Receipt, error) {
 	defer db.Close()
 
 	var receiptId string
-	//sqlStatement := "INSERT INTO receipts (id, receipt_id, cash_register_code, ico, icdph, dic, type, invoice_number, receipt_number, total_price, tax_base_basic, tax_base_reduced, vat_amount_basic, vat_amount_reduced, vat_rate_basic, vat_rate_reduced, exemption, issue_date, create_date, organization, unit, items)" +
-	//	" VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) RETURNING receipt_id;"
 	sqlStatement := "INSERT INTO receipts (id, receipt_id, cash_register_code, ico, icdph, dic, type, invoice_number, receipt_number, total_price, tax_base_basic, tax_base_reduced, vat_amount_basic, vat_amount_reduced, vat_rate_basic, vat_rate_reduced, exemption, issue_date, create_date, organization, unit, items)" +
 		" VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) RETURNING receipt_id;"
+
+	layout := "02.01.2006 15:04:05"
+	issueDate, _ := time.Parse(layout, r.IssueDate)
+	createDate, _ := time.Parse(layout, r.CreateDate)
+
+	org, _ := json.Marshal(r.Organization)
+	unit, _ := json.Marshal(r.Unit)
+	items, _ := json.Marshal(r.Items)
 
 	err := db.QueryRow(
 		sqlStatement,
@@ -153,11 +162,11 @@ func CreateReceipt(r Receipt) (Receipt, error) {
 		r.VatRateBasic,
 		r.VatRateReduced,
 		r.Exemption,
-		time.Now(), // r.IssueDate,    // convert to timestamp
-		time.Now(), //r.CreateDate,   // convert to timestamp
-		"{}",       // r.Organization, // convert to json
-		"{}",       // r.Unit,         // convert to json
-		"{}",       // r.Items,        // convert to json array
+		issueDate,
+		createDate,
+		org,
+		unit,
+		items,
 	).Scan(&receiptId)
 
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/google/uuid"
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/qrcode"
 	"image"
@@ -91,12 +92,15 @@ func (h *imageHandler) Process() {
 
 	responseStr += "\n That's all 😊"
 
-	h.parsedQrString = responseStr
-
 	// check if receipt_id already exists in db, if yes, return a message that it exists
-
-	// if it doesn't yet exist in db, persist in db
-	entities.CreateReceipt(file.Receipt)
+	existingReceipt, err := entities.GetReceiptByReceiptId(file.Receipt.ReceiptId)
+	if existingReceipt.Id != uuid.Nil {
+		h.parsedQrString = "This receipt already exists in the database"
+	} else {
+		// if it doesn't yet exist in db, persist in db
+		entities.CreateReceipt(file.Receipt)
+		h.parsedQrString = responseStr
+	}
 }
 
 func (h *imageHandler) GetResponseMessage() string {
