@@ -27,7 +27,7 @@ type ResponseHandler interface {
 func InitHandler(message *tgbotapi.Message, u entities.User) (ResponseHandler, error) {
 	handlers := []ResponseHandler{
 		&startHandler{text: message.Text},
-		&imageHandler{text: message.Text, image: message.Photo},
+		&imageHandler{text: message.Text, image: message.Photo, user: u},
 		&userHandler{
 			text: message.Text,
 			user: u,

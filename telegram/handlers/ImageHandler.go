@@ -30,6 +30,7 @@ type imageHandler struct {
 	image          []tgbotapi.PhotoSize
 	photoUrl       string
 	parsedQrString string
+	user           entities.User
 }
 
 func (h *imageHandler) IsResponsible() bool {
@@ -64,9 +65,9 @@ func (h *imageHandler) Process() {
 
 	h.photoUrl = fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", os.Getenv(constants.TelegramToken), tgResponse.Result.FilePath)
 
-	// TODO save in structure: {dataFolder}/{userId}/{chatId}
 	fileName := strings.SplitAfter(h.photoUrl, "/")
-	img, _ := os.Create(fileName[len(fileName)-1])
+	p := fmt.Sprintf("%s/%s/%s/%s", "data", h.user.UserId, h.user.ChatId, fileName[len(fileName)-1])
+	img, _ := createFileWithSubdirectories(p)
 	defer img.Close()
 
 	r, _ := http.Get(h.photoUrl)
@@ -96,7 +97,6 @@ func (h *imageHandler) Process() {
 
 	// if it doesn't yet exist in db, persist in db
 	entities.CreateReceipt(file.Receipt)
-
 }
 
 func (h *imageHandler) GetResponseMessage() string {
@@ -169,4 +169,11 @@ func verifyReceipt(receiptCode string) (*entities.FinancnaSpravaResponse, error)
 	}
 
 	return &response, nil
+}
+
+func createFileWithSubdirectories(p string) (*os.File, error) {
+	if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
+		return nil, err
+	}
+	return os.Create(p)
 }
