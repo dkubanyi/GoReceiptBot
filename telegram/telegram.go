@@ -50,11 +50,11 @@ func listen(botapi *tgbotapi.BotAPI) {
 		u, err := entities.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
 
 		if err != nil {
-			// user does not exist
+			// user does not exists
 			u, _ = entities.CreateUser(entities.FromMessage(update.Message))
 		}
 
-		handler, err := handlers.InitHandler(update.Message, u)
+		handler, err := handlers.InitHandler(update.Message, &u)
 
 		var responseMessage string
 
@@ -72,6 +72,7 @@ func listen(botapi *tgbotapi.BotAPI) {
 			tgbotapi.NewKeyboardButtonRow(
 				tgbotapi.NewKeyboardButton(handlers.CommandStart),
 				tgbotapi.NewKeyboardButton(handlers.CommandMe),
+				tgbotapi.NewKeyboardButton(handlers.CommandShowReceipts),
 				tgbotapi.NewKeyboardButton(handlers.CommandDeleteMe),
 			),
 		)

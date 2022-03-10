@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"GoBudgetBot/constants"
+	"GoBudgetBot/models"
 	"GoBudgetBot/models/entities"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/qrcode"
@@ -27,89 +27,100 @@ import (
 * This handler is responsible for processing updates containing images
  */
 type imageHandler struct {
-	text           string
-	image          []tgbotapi.PhotoSize
-	photoUrl       string
-	parsedQrString string
-	user           entities.User
+	context models.BotContext
 }
+
+var (
+	parsedQrString string
+	photoUrl       string
+)
 
 func (h *imageHandler) IsResponsible() bool {
-	return len(h.image) != 0
+	return len(h.context.Message.Photo) != 0
 }
 
-func (h *imageHandler) Process() {
-	// The last image in h.image slice has the best quality
-	fileId := h.image[len(h.image)-1].FileID
+func (h *imageHandler) Process() error {
+	// The last imgFile in h.imgFile slice has the best quality
+	img := h.context.Message.Photo
+	fileId := img[len(img)-1].FileID
 
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/getFile?file_id=%s", os.Getenv(constants.TelegramToken), fileId)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
-		return
+		return errors.New(fmt.Sprintf("failed to fetch photo from url %s. Reason: %v", url, err))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if err != nil {
-		log.Fatal(err)
-		return
+		return errors.New(fmt.Sprintf("failed to read response body from Financna sprava. Reason: %v", err))
 	}
 
 	tgResponse := new(entities.TelegramResponse)
 	err = json.NewDecoder(bytes.NewReader(body)).Decode(&tgResponse)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Print(err)
+		return errors.New("failed to decode QR code")
 	}
 
-	h.photoUrl = fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", os.Getenv(constants.TelegramToken), tgResponse.Result.FilePath)
+	photoUrl := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", os.Getenv(constants.TelegramToken), tgResponse.Result.FilePath)
 
-	fileName := strings.SplitAfter(h.photoUrl, "/")
-	p := fmt.Sprintf("%s/%s/%s/%s", "data", h.user.UserId, h.user.ChatId, fileName[len(fileName)-1])
-	img, _ := createFileWithSubdirectories(p)
-	defer img.Close()
+	fileName := strings.SplitAfter(photoUrl, "/")
+	p := fmt.Sprintf(
+		"%s/%s/%s/%s",
+		"data",
+		h.context.User.UserId,
+		h.context.User.ChatId,
+		fileName[len(fileName)-1],
+	)
 
-	r, _ := http.Get(h.photoUrl)
+	imgFile, _ := createFileWithSubdirectories(p)
+	defer imgFile.Close()
+
+	r, _ := http.Get(photoUrl)
 	defer resp.Body.Close()
 
-	io.Copy(img, r.Body)
+	io.Copy(imgFile, r.Body)
 
-	n, err := filepath.Abs(img.Name())
+	n, err := filepath.Abs(imgFile.Name())
 
 	file, err := recognizeFile(n)
 
 	if err != nil {
-		h.parsedQrString = err.Error()
-		return
+		return err
 	}
 
-	responseStr := "Your receipt contains the following items:\n"
-	for _, item := range file.Receipt.Items {
-		responseStr += fmt.Sprintf("<b>Item</b>: %s\n<b>Item type</b>: %s\n<b>Quantity</b>: %d pcs\n<b>VAT</b>: %d\n<b>Price</b>: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
-	}
-
-	responseStr += "\n That's all 😊"
-
-	// check if receipt_id already exists in db, if yes, return a message that it exists
 	existingReceipt, err := entities.GetReceiptByReceiptId(file.Receipt.ReceiptId)
 	if existingReceipt.Id != uuid.Nil {
-		h.parsedQrString = "This receipt already exists in the database"
-	} else {
-		// if it doesn't yet exist in db, persist in db
-		entities.CreateReceipt(file.Receipt)
-		h.parsedQrString = responseStr
+		return errors.New("this receipt already exists in the database")
 	}
+
+	// transaction?
+	receipt, err := entities.CreateReceipt(file.Receipt)
+	if err != nil {
+		log.Printf("could not create receipt: %v", err)
+		return errors.New("failed to save receipt, please try again later")
+	}
+
+	entities.CreateUserReceiptMapping(h.context.User, &receipt)
+
+	parsedQrString = "Your receipt contains the following items:\n"
+	for _, item := range file.Receipt.Items {
+		parsedQrString += fmt.Sprintf("<b>Item</b>: %s\n<b>Item type</b>: %s\n<b>Quantity</b>: %d pcs\n<b>VAT</b>: %d\n<b>Price</b>: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
+	}
+	parsedQrString += "\n That's all 😊"
+
+	return nil
 }
 
 func (h *imageHandler) GetResponseMessage() string {
 	var msg string
 
-	if len(h.parsedQrString) == 0 {
+	if len(parsedQrString) == 0 {
 		msg = fmt.Sprintf("No QR code detected on the image. Please make sure it is well visible on the uploaded photo, and try again.")
 	} else {
-		msg = fmt.Sprintf("Result: %s. URL of the photo on Telegram's servers: %s", h.parsedQrString, h.photoUrl)
+		msg = fmt.Sprintf("Result: %s. URL of the photo on Telegram's servers: %s", parsedQrString, photoUrl)
 	}
 
 	// TODO process the photo, e.g. if it is a QR code of a payment, parse it and save in DB
@@ -119,10 +130,10 @@ func (h *imageHandler) GetResponseMessage() string {
 func recognizeFile(path string) (*entities.FinancnaSpravaResponse, error) {
 	// open and decode image file
 	file, _ := os.Open(path)
-	img, _, _ := image.Decode(file)
+	img, _, err := image.Decode(file)
 
-	if img == nil {
-		log.Println("Could not decode image")
+	if err != nil { // img == nil
+		log.Printf("Could not decode image: %v", err)
 		return nil, errors.New("could not decode image")
 	}
 
