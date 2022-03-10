@@ -73,7 +73,6 @@ func listen(botapi *tgbotapi.BotAPI) {
 				tgbotapi.NewKeyboardButton(handlers.CommandStart),
 				tgbotapi.NewKeyboardButton(handlers.CommandMe),
 				tgbotapi.NewKeyboardButton(handlers.CommandShowReceipts),
-				tgbotapi.NewKeyboardButton(handlers.CommandDeleteMe),
 			),
 		)
 

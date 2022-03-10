@@ -96,14 +96,17 @@ func (h *imageHandler) Process() error {
 		return errors.New("this receipt already exists in the database")
 	}
 
-	// transaction?
+	// TODO transaction
 	receipt, err := entities.CreateReceipt(file.Receipt)
 	if err != nil {
 		log.Printf("could not create receipt: %v", err)
 		return errors.New("failed to save receipt, please try again later")
 	}
 
-	entities.CreateUserReceiptMapping(h.context.User, &receipt)
+	if err := entities.CreateUserReceiptMapping(h.context.User, &receipt); err != nil {
+		log.Printf("could not create user-receipt mapping: %v", err)
+		return errors.New("failed to save receipt mapping to user")
+	}
 
 	parsedQrString = "Your receipt contains the following items:\n"
 	for _, item := range file.Receipt.Items {

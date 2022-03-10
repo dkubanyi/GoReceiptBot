@@ -141,7 +141,7 @@ func GetReceiptsForUser(userId uuid.UUID) ([]Receipt, error) {
 	defer db.Close()
 	var receipts []Receipt
 
-	rows, err := db.Query(`SELECT * FROM receipts_sk WHERE id IN (SELECT receipt_id_sk::uuid as uuid FROM user_receipts WHERE user_id::text = $1)`, userId)
+	rows, err := db.Query(`SELECT * FROM receipts WHERE id IN (SELECT receipt_id_sk::uuid as uuid FROM user_receipts WHERE user_id::text = $1)`, userId)
 	defer rows.Close()
 
 	if err != nil {
@@ -185,7 +185,7 @@ func GetReceiptByReceiptId(receiptId string) (Receipt, error) {
 	defer db.Close()
 	var r Receipt
 
-	row := db.QueryRow(`SELECT * FROM receipts_sk WHERE receipt_id = $1`, receiptId)
+	row := db.QueryRow(`SELECT * FROM receipts WHERE receipt_id = $1`, receiptId)
 	err := row.Scan(
 		&r.Id,
 		&r.ReceiptId,
@@ -225,7 +225,7 @@ func CreateReceipt(r Receipt) (Receipt, error) {
 	defer db.Close()
 
 	var receiptId string
-	sqlStatement := "INSERT INTO receipts_sk (id, receipt_id, cash_register_code, ico, ic_dph, dic, type, invoice_number, receipt_number, total_price, tax_base_basic, tax_base_reduced, vat_amount_basic, vat_amount_reduced, vat_rate_basic, vat_rate_reduced, issue_date, create_date, organization, unit, items)" +
+	sqlStatement := "INSERT INTO receipts (id, receipt_id, cash_register_code, ico, ic_dph, dic, type, invoice_number, receipt_number, total_price, tax_base_basic, tax_base_reduced, vat_amount_basic, vat_amount_reduced, vat_rate_basic, vat_rate_reduced, issue_date, create_date, organization, unit, items)" +
 		" VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING receipt_id;"
 
 	layout := "02.01.2006 15:04:05"
@@ -277,7 +277,7 @@ func CreateUserReceiptMapping(u *User, r *Receipt) error {
 	db := CreateConnection()
 	defer db.Close()
 
-	_, err := db.Query("INSERT INTO user_receipts (id, user_id, receipt_id_sk) VALUES ($1, $2, $3);", uuid.New(), u.Id, r.Id)
+	_, err := db.Query("INSERT INTO user_receipts (user_id, receipt_id_sk) VALUES ($1, $2);", u.Id, r.Id)
 	if err != nil {
 		return errors.New("failed to execute query")
 	}
@@ -293,7 +293,7 @@ func DeleteReceiptsByUserId(u *User) error {
 	db := CreateConnection()
 	defer db.Close()
 
-	_, err := db.Query("DELETE FROM receipts_sk WHERE id IN (SELECT receipt_id_sk::uuid as uuid FROM user_receipts WHERE user_id::text = $1)", u.Id)
+	_, err := db.Query("DELETE FROM receipts WHERE id IN (SELECT receipt_id_sk::uuid as uuid FROM user_receipts WHERE user_id::text = $1)", u.Id)
 
 	// @TODO also delete saved photos from filesystem?
 

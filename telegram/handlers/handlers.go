@@ -18,7 +18,8 @@ const (
 		CommandStart + " --> display this message\n" +
 		CommandMe + " --> show your user information\n" +
 		CommandShowReceipts + " --> show your saved receipts\n" +
-		CommandDeleteMe + " --> delete all your data in BudgetBot. ⚠️ Warning ⚠️ This is irreversible!!!"
+		"\nYou can also choose to delete all your data associated with this bot." +
+		"\nUse " + CommandDeleteMe + " to do that. \n⚠️ Warning ⚠️ This is irreversible!!!"
 )
 
 type ResponseHandler interface {
