@@ -70,12 +70,9 @@ COMMENT ON COLUMN receipts_sk.invoice_number
 
 CREATE TABLE IF NOT EXISTS user_receipts
 (
-    id uuid NOT NULL PRIMARY KEY,
-    user_id uuid NOT NULL,
-    receipt_id_sk uuid NOT NULL
+    user_id       uuid NOT NULL,
+    receipt_id_sk uuid NOT NULL,
+    PRIMARY KEY ("user_id", "receipt_id_sk"),
+    CONSTRAINT "fk_user_receipts_user_id" FOREIGN KEY ("user_id") REFERENCES users ("id") ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT "fk_user_receipts_receipt_id" FOREIGN KEY ("receipt_id_sk") REFERENCES receipts_sk ("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
-
-CREATE UNIQUE INDEX "user_receipts_user_id_receipt_id_sk_key" ON user_receipts USING BTREE ("user_id","receipt_id_sk");
-
-ALTER TABLE user_receipts ADD FOREIGN KEY ("user_id") REFERENCES users ("id") ON UPDATE CASCADE ON DELETE CASCADE;
-ALTER TABLE user_receipts ADD FOREIGN KEY ("receipt_id_sk") REFERENCES receipts_sk ("id") ON UPDATE CASCADE ON DELETE CASCADE;
