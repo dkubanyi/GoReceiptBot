@@ -61,8 +61,11 @@ func listen(botapi *tgbotapi.BotAPI) {
 		if err != nil {
 			responseMessage = unrecognizedCommand
 		} else {
-			handler.Process()
-			responseMessage = handler.GetResponseMessage()
+			if err := handler.Process(); err != nil {
+				responseMessage = fmt.Sprintf("Error: %v", err)
+			} else {
+				responseMessage = handler.GetResponseMessage()
+			}
 		}
 
 		response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMessage)

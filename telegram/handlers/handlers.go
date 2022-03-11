@@ -10,6 +10,7 @@ import (
 const (
 	CommandStart        = "/start"
 	CommandMe           = "/me"
+	CommandQr           = "/qr"
 	CommandShowReceipts = "/showReceipts"
 	CommandDeleteMe     = "/deleteMe"
 	defaultMessage      = "Welcome to BudgetBot.\n" +
@@ -17,6 +18,7 @@ const (
 		"Alternatively, try one of the following commands:\n" +
 		CommandStart + " --> display this message\n" +
 		CommandMe + " --> show your user information\n" +
+		CommandQr + " [text] --> submits [text] as a QR code\n" +
 		CommandShowReceipts + " --> show your saved receipts\n" +
 		"\nYou can also choose to delete all your data associated with this bot." +
 		"\nUse " + CommandDeleteMe + " to do that. \n⚠️ Warning ⚠️ This is irreversible!!!"
@@ -37,6 +39,7 @@ func InitHandler(message *tgbotapi.Message, u *entities.User) (ResponseHandler, 
 	handlers := []ResponseHandler{
 		&startHandler{context},
 		&imageHandler{context},
+		&qrHandler{context},
 		&receiptHandler{context},
 		&userHandler{context},
 	}
