@@ -31,8 +31,7 @@ type imageHandler struct {
 }
 
 var (
-	parsedQrString string
-	photoUrl       string
+	response string
 )
 
 func (h *imageHandler) IsResponsible() bool {
@@ -96,8 +95,13 @@ func (h *imageHandler) Process() error {
 		return errors.New("this receipt already exists in the database")
 	}
 
+	filePath, err := filepath.Abs(imgFile.Name())
+	if err != nil {
+		return errors.New("failed to get absolute path from saved file")
+	}
+
 	// TODO transaction
-	receipt, err := entities.CreateReceipt(file.Receipt)
+	receipt, err := entities.CreateReceipt(file.Receipt, filePath)
 	if err != nil {
 		log.Printf("could not create receipt: %v", err)
 		return errors.New("failed to save receipt, please try again later")
@@ -108,26 +112,21 @@ func (h *imageHandler) Process() error {
 		return errors.New("failed to save receipt mapping to user")
 	}
 
-	parsedQrString = "Your receipt contains the following items:\n"
+	response = "Your receipt contains the following items:\n"
 	for _, item := range file.Receipt.Items {
-		parsedQrString += fmt.Sprintf("<b>Item</b>: %s\n<b>Item type</b>: %s\n<b>Quantity</b>: %d pcs\n<b>VAT</b>: %d\n<b>Price</b>: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
+		response += fmt.Sprintf("<b>Item</b>: %s\n<b>Item type</b>: %s\n<b>Quantity</b>: %d pcs\n<b>VAT</b>: %d\n<b>Price</b>: %f\n\n", item.Name, item.ItemType, int64(item.Quantity), int64(item.VatRate), item.Price)
 	}
-	parsedQrString += "\n That's all 😊"
+	response += "\n That's all 😊"
 
 	return nil
 }
 
 func (h *imageHandler) GetResponseMessage() string {
-	var msg string
-
-	if len(parsedQrString) == 0 {
-		msg = fmt.Sprintf("No QR code detected on the image. Please make sure it is well visible on the uploaded photo, and try again.")
+	if len(response) == 0 {
+		return fmt.Sprintf("No QR code detected on the image. Please make sure it is well visible on the uploaded photo, and try again.")
 	} else {
-		msg = fmt.Sprintf("Result: %s. URL of the photo on Telegram's servers: %s", parsedQrString, photoUrl)
+		return response
 	}
-
-	// TODO process the photo, e.g. if it is a QR code of a payment, parse it and save in DB
-	return msg
 }
 
 func recognizeFile(path string) (*entities.FinancnaSpravaResponse, error) {

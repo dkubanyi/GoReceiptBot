@@ -75,8 +75,8 @@ IS 'Location of the receipt file in the filesystem, if it was submitted as a pho
 CREATE TABLE IF NOT EXISTS user_receipts
 (
     user_id       uuid NOT NULL,
-    receipt_id_sk uuid NOT NULL,
-    PRIMARY KEY ("user_id", "receipt_id_sk"),
+    receipt_id uuid NOT NULL,
+    PRIMARY KEY ("user_id", "receipt_id"),
     CONSTRAINT "fk_user_receipts_user_id" FOREIGN KEY ("user_id") REFERENCES users ("id") ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT "fk_user_receipts_receipt_id" FOREIGN KEY ("receipt_id_sk") REFERENCES receipts ("id") ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT "fk_user_receipts_receipt_id" FOREIGN KEY ("receipt_id") REFERENCES receipts ("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
