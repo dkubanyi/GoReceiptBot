@@ -13,7 +13,7 @@ import (
 )
 
 // FinancnaSpravaResponse
-// Following structs represent the response from Financna sprava. Official document is available here:
+// Following structs represent the response from Financna sprava API. Official document is available here:
 // https://www.financnasprava.sk/_img/pfsedit/Dokumenty_PFS/Podnikatelia/eKasa/2019/2019.05.27_eKasa_rozhranie.pdf
 type FinancnaSpravaResponse struct {
 	ReturnValue          int                  `json:"returnValue"`
@@ -28,17 +28,6 @@ type SearchIdentification struct {
 	SearchUUID        string `json:"searchUuid"`
 }
 
-/**
-Type:
-- Pokladničný doklad - doklad o prijatí tržby, doklad o vrátení platby za vrátený tovar, doklad o
-vrátení platby za tovar alebo poskytnutú službu pri ich reklamácii, doklad o vrátení platby za
-neposkytnutú službu alebo doklad za vrátené zálohované obaly vyhotovený ORP
-- Úhrada faktúry - doklad o prijatí tržby v prípade, ak ide o úhradu faktúry alebo jej časti
-- Neplatný doklad - doklad vyhotovený v rámci skúšobnej prevádzky ORP alebo pri zaškolení
-fyzickej osoby, ktorá bude evidovať tržby v ORP
-- Vklad – doklad evidovaný pri vklade hotovosti do pokladnice
-- Výber – doklad evidovaný pri výbere hotovosti z pokladnice
-*/
 type Receipt struct {
 	Id               uuid.UUID           `json:"id"`
 	ReceiptId        string              `json:"receiptId"`

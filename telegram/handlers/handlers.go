@@ -24,6 +24,8 @@ const (
 		"\nUse " + CommandDeleteMe + " to do that. \n⚠️ Warning ⚠️ This is irreversible!!!"
 )
 
+var response string
+
 type ResponseHandler interface {
 	IsResponsible() bool
 	Process() error

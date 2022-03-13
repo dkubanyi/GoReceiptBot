@@ -30,10 +30,6 @@ type imageHandler struct {
 	context models.BotContext
 }
 
-var (
-	response string
-)
-
 func (h *imageHandler) IsResponsible() bool {
 	return len(h.context.Message.Photo) != 0
 }
