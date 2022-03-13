@@ -14,7 +14,6 @@ func (h *startHandler) IsResponsible() bool {
 }
 
 func (h *startHandler) Process() error {
-	// TODO save into DB, etc
 	return nil
 }
 
