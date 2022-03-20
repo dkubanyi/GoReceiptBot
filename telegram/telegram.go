@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/models/entities"
+	"GoBudgetBot/models"
 	"GoBudgetBot/telegram/handlers"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -47,11 +47,11 @@ func listen(botapi *tgbotapi.BotAPI) {
 			continue
 		}
 
-		u, err := entities.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
+		u, err := models.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
 
 		if err != nil {
 			// user does not exists
-			u, _ = entities.CreateUser(entities.FromMessage(update.Message))
+			u, _ = models.CreateUser(models.FromMessage(update.Message))
 		}
 
 		handler, err := handlers.InitHandler(update.Message, &u)

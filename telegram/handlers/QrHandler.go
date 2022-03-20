@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"GoBudgetBot/models"
-	"GoBudgetBot/models/entities"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -34,19 +33,19 @@ func (h *qrHandler) Process() error {
 		return err
 	}
 
-	existingReceipt, err := entities.GetReceiptByReceiptId(receipt.Receipt.ReceiptId)
+	existingReceipt, err := models.GetReceiptByReceiptId(receipt.Receipt.ReceiptId)
 	if existingReceipt.Id != uuid.Nil {
 		return errors.New("this receipt already exists in the database")
 	}
 
 	// TODO transaction
-	r, err := entities.CreateReceipt(receipt.Receipt, "")
+	r, err := models.CreateReceipt(receipt.Receipt, "")
 	if err != nil {
 		log.Printf("could not create receipt: %v", err)
 		return errors.New("failed to save receipt, please try again later")
 	}
 
-	if err := entities.CreateUserReceiptMapping(h.context.User, &r); err != nil {
+	if err := models.CreateUserReceiptMapping(h.context.User, &r); err != nil {
 		log.Printf("could not create user-receipt mapping: %v", err)
 		return errors.New("failed to save receipt mapping to user")
 	}

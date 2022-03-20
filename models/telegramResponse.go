@@ -1,4 +1,4 @@
-package entities
+package models
 
 type TelegramResponse struct {
 	Ok     bool `json:"ok"`

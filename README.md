@@ -4,13 +4,12 @@ Telegram bot for archiving of purchase receipts by scanning of QR code from the 
 
 ## Installation
 ### Using Docker
-TBD
+The simplest way to start the service is docker:
 
-### Local build
-TBD
-
-### Tests
-TBD
+Clone the repo and run docker-compose:
+```
+docker-compose up -d
+```
 
 ### Usage
 First, you must create a Telegram bot and obtain its access token. To do that, follow the instructions <a href="https://core.telegram.org/bots">here</a>.

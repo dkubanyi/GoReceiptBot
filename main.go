@@ -2,11 +2,14 @@ package main
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/models/entities"
+	"GoBudgetBot/models"
 	"GoBudgetBot/telegram"
+	"database/sql"
+	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -17,8 +20,28 @@ func main() {
 	}
 
 	// test connection
-	db := entities.CreateConnection()
-	defer db.Close()
+	models.DB = createConnection()
 
 	telegram.Start(os.Getenv(constants.TelegramToken))
+}
+
+func createConnection() *sql.DB {
+	// Open the connection
+	db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
+
+	if err != nil {
+		panic(err)
+	}
+
+	// check the connection
+	err = db.Ping()
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Successfully connected!")
+
+	// return the connection
+	return db
 }

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"GoBudgetBot/models"
-	"GoBudgetBot/models/entities"
 	"errors"
 	"fmt"
 	"log"
@@ -23,12 +22,12 @@ func (h *userHandler) IsResponsible() bool {
 func (h *userHandler) Process() error {
 	if h.context.Message.Text == CommandDeleteMe {
 		// TODO transaction
-		if err := entities.DeleteReceiptsByUserId(h.context.User); err != nil {
+		if err := models.DeleteReceiptsByUserId(h.context.User); err != nil {
 			log.Printf("Failed to delete receipts for user: %v", err)
 			return errors.New("failed to delete receipts for user")
 		}
 
-		if _, err := entities.DeleteUserById(h.context.User.Id); err != nil {
+		if _, err := models.DeleteUserById(h.context.User.Id); err != nil {
 			log.Printf("Failed to delete user: %v", err)
 			return errors.New("failed to delete user")
 		}

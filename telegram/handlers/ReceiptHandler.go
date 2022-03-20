@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"GoBudgetBot/models"
-	"GoBudgetBot/models/entities"
 	"fmt"
 )
 
@@ -22,7 +21,7 @@ func (h *receiptHandler) Process() error {
 }
 
 func (h *receiptHandler) GetResponseMessage() string {
-	receipts, err := entities.GetReceiptsForUser(h.context.User.Id)
+	receipts, err := models.GetReceiptsForUser(h.context.User.Id)
 
 	if err != nil {
 		return fmt.Sprintf("An error occurred while fetching your data. Please try again later.\nDetails: %s", err.Error())
