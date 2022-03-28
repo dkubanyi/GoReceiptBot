@@ -1,30 +1,27 @@
 version: '3.7'
 services:
-#  postgres:
-#    image: postgres:14.2
-#    container_name: db_receiptbot
-#    restart: unless-stopped
-#    environment:
-#      - POSTGRES_USER=postgres
-#      - POSTGRES_PASSWORD=postgres
-#    logging:
-#      options:
-#        max-size: 10m
-#        max-file: "3"
-#    ports:
-#      - '5433:5432'
-#    volumes:
-#      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-#      - ./db/postgres-data:/var/lib/postgresql/data
-#    networks:
-#      - bot_common
-#    healthcheck:
-#      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
-#      timeout: 45s
-#      interval: 10s
-#      retries: 10
+  postgres:
+    image: postgres:14.2
+    container_name: db_receiptbot
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - '5433:5432'
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
   bot:
-#    image: golang:1.18.0-alpine
     build:
       dockerfile: Dockerfile
       context: .
@@ -35,10 +32,3 @@ services:
     env_file:
       - .env
     network_mode: host
-#    networks:
-#      - bot_common
-
-#networks:
-#  bot_common:
-#    # use the bridge driver, but enable IPv6
-#    driver: bridge
