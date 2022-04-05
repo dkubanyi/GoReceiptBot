@@ -1,4 +1,4 @@
-package models
+package receipt
 
 import (
 	"database/sql/driver"

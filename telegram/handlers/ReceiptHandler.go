@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"GoBudgetBot/models"
+	"GoBudgetBot/internal/domain/context"
+	"GoBudgetBot/internal/domain/receipt"
 	"fmt"
 )
 
@@ -9,7 +10,7 @@ import (
 * This handler is responsible for responding to receipt queries
  */
 type receiptHandler struct {
-	context models.BotContext
+	context context.BotContext
 }
 
 func (h *receiptHandler) IsResponsible() bool {
@@ -21,7 +22,7 @@ func (h *receiptHandler) Process() error {
 }
 
 func (h *receiptHandler) GetResponseMessage() string {
-	receipts, err := models.GetReceiptsForUser(h.context.User.Id)
+	receipts, err := receipt.GetReceiptsForUser(h.context.User.Id)
 
 	if err != nil {
 		return fmt.Sprintf("An error occurred while fetching your data. Please try again later.\nDetails: %s", err.Error())

@@ -1,4 +1,4 @@
-package models
+package thirdparty
 
 type SearchIdentification struct {
 	CreateDate        int64  `json:"createDate"`

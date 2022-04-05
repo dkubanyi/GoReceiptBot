@@ -1,6 +1,7 @@
-package models
+package user
 
 import (
+	"GoBudgetBot/internal/domain"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -36,7 +37,7 @@ func ListUsers() ([]User, error) {
 	var users []User
 
 	sqlStatement := `SELECT * FROM users`
-	rows, err := DB.Query(sqlStatement)
+	rows, err := domain.DB.Query(sqlStatement)
 
 	if err != nil {
 		log.Fatalf("Unable to execute query. %v", err)
@@ -61,7 +62,7 @@ func ListUsers() ([]User, error) {
 func GetByUserIdAndChatId(userId string, chatId string) (User, error) {
 	var user User
 
-	row := DB.QueryRow(`SELECT * FROM users WHERE user_id = $1 AND chat_id = $2`, userId, chatId)
+	row := domain.DB.QueryRow(`SELECT * FROM users WHERE user_id = $1 AND chat_id = $2`, userId, chatId)
 	err := row.Scan(&user.Id, &user.UserId, &user.ChatId, &user.Username, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
 
 	switch err {
@@ -78,7 +79,7 @@ func CreateUser(user User) (User, error) {
 	var id string
 	sqlStatement := "INSERT INTO users (id, user_id, chat_id, username, first_name, last_name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id"
 
-	err := DB.QueryRow(
+	err := domain.DB.QueryRow(
 		sqlStatement,
 		uuid.New(),
 		user.UserId,
@@ -101,7 +102,7 @@ func CreateUser(user User) (User, error) {
 func DeleteUserById(uuid uuid.UUID) (bool, error) {
 	sqlStatement := "DELETE FROM users WHERE id=$1"
 
-	_, err := DB.Exec(sqlStatement, uuid)
+	_, err := domain.DB.Exec(sqlStatement, uuid)
 
 	if err != nil {
 		return false, errors.New(fmt.Sprintf("Unable to execute query. %v", err))

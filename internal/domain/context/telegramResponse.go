@@ -1,4 +1,4 @@
-package models
+package context
 
 type TelegramResponse struct {
 	Ok     bool `json:"ok"`

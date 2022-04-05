@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/models"
+	"GoBudgetBot/internal/domain/context"
+	"GoBudgetBot/internal/domain/receipt"
+	"GoBudgetBot/internal/thirdparty"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -26,7 +28,7 @@ import (
 * This handler is responsible for processing updates containing images
  */
 type imageHandler struct {
-	context models.BotContext
+	context context.BotContext
 }
 
 func (h *imageHandler) IsResponsible() bool {
@@ -51,7 +53,7 @@ func (h *imageHandler) Process() error {
 		return errors.New(fmt.Sprintf("failed to read response body from Financna sprava. Reason: %v", err))
 	}
 
-	tgResponse := new(models.TelegramResponse)
+	tgResponse := new(context.TelegramResponse)
 
 	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&tgResponse); err != nil {
 		log.Print(err)
@@ -85,7 +87,7 @@ func (h *imageHandler) Process() error {
 		return err
 	}
 
-	existingReceipt, err := models.GetReceiptByReceiptId(file.Receipt.ReceiptId)
+	existingReceipt, err := receipt.GetReceiptByReceiptId(file.Receipt.ReceiptId)
 	if existingReceipt.Id != uuid.Nil {
 		return errors.New("this receipt already exists in the database")
 	}
@@ -96,13 +98,13 @@ func (h *imageHandler) Process() error {
 	}
 
 	// TODO transaction
-	receipt, err := models.CreateReceipt(file.Receipt, filePath)
+	savedReceipt, err := receipt.CreateReceipt(file.Receipt, filePath)
 	if err != nil {
 		log.Printf("could not create receipt: %v", err)
 		return errors.New("failed to save receipt, please try again later")
 	}
 
-	if err := models.CreateUserReceiptMapping(h.context.User, &receipt); err != nil {
+	if err := receipt.CreateUserReceiptMapping(h.context.User, &savedReceipt); err != nil {
 		log.Printf("could not create user-receipt mapping: %v", err)
 		return errors.New("failed to save receipt mapping to user")
 	}
@@ -124,7 +126,7 @@ func (h *imageHandler) GetResponseMessage() string {
 	}
 }
 
-func recognizeFile(path string) (*models.FinancnaSpravaResponse, error) {
+func recognizeFile(path string) (*thirdparty.FinancnaSpravaResponse, error) {
 	// open and decode image file
 	file, _ := os.Open(path)
 	img, _, err := image.Decode(file)
@@ -158,7 +160,7 @@ func recognizeFile(path string) (*models.FinancnaSpravaResponse, error) {
 	return receipt, nil
 }
 
-func verifyReceipt(receiptCode string) (*models.FinancnaSpravaResponse, error) {
+func verifyReceipt(receiptCode string) (*thirdparty.FinancnaSpravaResponse, error) {
 	// request financna sprava
 	finspravaUrl := "https://ekasa.financnasprava.sk/mdu/api/v1/opd/receipt/find"
 
@@ -175,7 +177,7 @@ func verifyReceipt(receiptCode string) (*models.FinancnaSpravaResponse, error) {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	var response models.FinancnaSpravaResponse
+	var response thirdparty.FinancnaSpravaResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("cannot unmarshal JSON")
 	}

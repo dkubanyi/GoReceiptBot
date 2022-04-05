@@ -1,7 +1,9 @@
 package handlers
 
 import (
-	"GoBudgetBot/models"
+	"GoBudgetBot/internal/domain/context"
+	"GoBudgetBot/internal/domain/receipt"
+	"GoBudgetBot/internal/domain/user"
 	"errors"
 	"fmt"
 	"log"
@@ -11,7 +13,7 @@ import (
 * This handler is responsible for processing user updates
  */
 type userHandler struct {
-	context models.BotContext
+	context context.BotContext
 }
 
 func (h *userHandler) IsResponsible() bool {
@@ -22,12 +24,12 @@ func (h *userHandler) IsResponsible() bool {
 func (h *userHandler) Process() error {
 	if h.context.Message.Text == CommandDeleteMe {
 		// TODO transaction
-		if err := models.DeleteReceiptsByUserId(h.context.User); err != nil {
+		if err := receipt.DeleteReceiptsByUserId(h.context.User); err != nil {
 			log.Printf("Failed to delete receipts for user: %v", err)
 			return errors.New("failed to delete receipts for user")
 		}
 
-		if _, err := models.DeleteUserById(h.context.User.Id); err != nil {
+		if _, err := user.DeleteUserById(h.context.User.Id); err != nil {
 			log.Printf("Failed to delete user: %v", err)
 			return errors.New("failed to delete user")
 		}

@@ -1,12 +1,14 @@
 package handlers
 
-import "GoBudgetBot/models"
+import (
+	"GoBudgetBot/internal/domain/context"
+)
 
 /**
 * This handler is responsible for handling the initial "/start" command
  */
 type startHandler struct {
-	context models.BotContext
+	context context.BotContext
 }
 
 func (h *startHandler) IsResponsible() bool {
