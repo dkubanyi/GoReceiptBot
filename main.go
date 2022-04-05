@@ -2,7 +2,7 @@ package main
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/models"
+	"GoBudgetBot/internal/domain"
 	"GoBudgetBot/telegram"
 	"database/sql"
 	"log"
@@ -18,7 +18,7 @@ func main() {
 	}
 
 	// test connection
-	models.DB = createConnection()
+	domain.DB = createConnection()
 
 	telegram.Start(os.Getenv(constants.TelegramToken))
 }

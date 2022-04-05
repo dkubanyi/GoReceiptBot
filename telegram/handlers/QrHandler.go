@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"GoBudgetBot/models"
+	"GoBudgetBot/internal/domain/context"
+	r "GoBudgetBot/internal/domain/receipt"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ import (
 * This handler is responsible for processing of QR codes, passed as a string
  */
 type qrHandler struct {
-	context models.BotContext
+	context context.BotContext
 }
 
 func (h *qrHandler) IsResponsible() bool {
@@ -33,19 +34,19 @@ func (h *qrHandler) Process() error {
 		return err
 	}
 
-	existingReceipt, err := models.GetReceiptByReceiptId(receipt.Receipt.ReceiptId)
+	existingReceipt, err := r.GetReceiptByReceiptId(receipt.Receipt.ReceiptId)
 	if existingReceipt.Id != uuid.Nil {
 		return errors.New("this receipt already exists in the database")
 	}
 
 	// TODO transaction
-	r, err := models.CreateReceipt(receipt.Receipt, "")
+	r, err := r.CreateReceipt(receipt.Receipt, "")
 	if err != nil {
 		log.Printf("could not create receipt: %v", err)
 		return errors.New("failed to save receipt, please try again later")
 	}
 
-	if err := models.CreateUserReceiptMapping(h.context.User, &r); err != nil {
+	if err := r.CreateUserReceiptMapping(h.context.User); err != nil {
 		log.Printf("could not create user-receipt mapping: %v", err)
 		return errors.New("failed to save receipt mapping to user")
 	}

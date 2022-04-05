@@ -1,6 +1,8 @@
-package models
+package receipt
 
 import (
+	"GoBudgetBot/internal/domain"
+	"GoBudgetBot/internal/domain/user"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -39,7 +41,7 @@ type Receipt struct {
 func GetReceiptsForUser(userId uuid.UUID) ([]Receipt, error) {
 	var receipts []Receipt
 
-	rows, err := DB.Query(`SELECT * FROM receipts WHERE id IN (SELECT receipt_id::uuid as uuid FROM user_receipts WHERE user_id::text = $1)`, userId)
+	rows, err := domain.DB.Query(`SELECT * FROM receipts WHERE id IN (SELECT receipt_id::uuid as uuid FROM user_receipts WHERE user_id::text = $1)`, userId)
 	defer rows.Close()
 
 	if err != nil {
@@ -82,7 +84,7 @@ func GetReceiptsForUser(userId uuid.UUID) ([]Receipt, error) {
 func GetReceiptByReceiptId(receiptId string) (Receipt, error) {
 	var r Receipt
 
-	row := DB.QueryRow(`SELECT * FROM receipts WHERE receipt_id = $1`, receiptId)
+	row := domain.DB.QueryRow(`SELECT * FROM receipts WHERE receipt_id = $1`, receiptId)
 	err := row.Scan(
 		&r.Id,
 		&r.ReceiptId,
@@ -131,7 +133,7 @@ func CreateReceipt(r Receipt, filePath string) (Receipt, error) {
 	unit, _ := json.Marshal(r.Unit)
 	items, _ := json.Marshal(r.Items)
 
-	err := DB.QueryRow(
+	err := domain.DB.QueryRow(
 		sqlStatement,
 		uuid.New(),
 		r.ReceiptId,
@@ -165,12 +167,12 @@ func CreateReceipt(r Receipt, filePath string) (Receipt, error) {
 	return GetReceiptByReceiptId(receiptId)
 }
 
-func CreateUserReceiptMapping(u *User, r *Receipt) error {
+func CreateUserReceiptMapping(u *user.User, r *Receipt) error {
 	if u.Id == uuid.Nil || r.Id == uuid.Nil {
 		return errors.New("could not create mapping for user and receipt")
 	}
 
-	_, err := DB.Query("INSERT INTO user_receipts (user_id, receipt_id) VALUES ($1, $2);", u.Id, r.Id)
+	_, err := domain.DB.Query("INSERT INTO user_receipts (user_id, receipt_id) VALUES ($1, $2);", u.Id, r.Id)
 	if err != nil {
 		return errors.New("failed to execute query")
 	}
@@ -178,7 +180,20 @@ func CreateUserReceiptMapping(u *User, r *Receipt) error {
 	return nil
 }
 
-func DeleteReceiptsByUserId(u *User) error {
+func (r Receipt) CreateUserReceiptMapping(u *user.User) error {
+	if u.Id == uuid.Nil || r.Id == uuid.Nil {
+		return errors.New("could not create mapping for user and receipt")
+	}
+
+	_, err := domain.DB.Query("INSERT INTO user_receipts (user_id, receipt_id) VALUES ($1, $2);", u.Id, r.Id)
+	if err != nil {
+		return errors.New("failed to execute query")
+	}
+
+	return nil
+}
+
+func DeleteReceiptsByUserId(u *user.User) error {
 	if u.Id == uuid.Nil {
 		return errors.New("could not delete receipts of user: nil user ID passed")
 	}
@@ -198,7 +213,7 @@ func DeleteReceiptsByUserId(u *User) error {
 		}
 	}
 
-	if _, err := DB.Query("DELETE FROM receipts WHERE id IN (SELECT receipt_id::uuid as uuid FROM user_receipts WHERE user_id::text = $1)", u.Id); err != nil {
+	if _, err := domain.DB.Query("DELETE FROM receipts WHERE id IN (SELECT receipt_id::uuid as uuid FROM user_receipts WHERE user_id::text = $1)", u.Id); err != nil {
 		msg := "failed to delete receipts"
 		log.Printf("%s: %v", msg, err)
 		return errors.New(msg)

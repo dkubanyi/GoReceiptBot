@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"GoBudgetBot/constants"
-	"GoBudgetBot/models"
+	"GoBudgetBot/internal/domain/user"
 	"GoBudgetBot/telegram/handlers"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -47,28 +47,14 @@ func listen(botapi *tgbotapi.BotAPI) {
 			continue
 		}
 
-		u, err := models.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
+		u, err := user.GetByUserIdAndChatId(strconv.FormatInt(update.Message.From.ID, 10), strconv.FormatInt(update.Message.Chat.ID, 10))
 
 		if err != nil {
-			// user does not exists
-			u, _ = models.CreateUser(models.FromMessage(update.Message))
+			// user does not exist
+			u, _ = user.CreateUser(user.FromMessage(update.Message))
 		}
 
-		handler, err := handlers.InitHandler(update.Message, &u)
-
-		var handlerResponse string
-
-		if err != nil {
-			handlerResponse = unrecognizedCommand
-		} else {
-			if err := handler.Process(); err != nil {
-				handlerResponse = fmt.Sprintf("Error: %v", err)
-			} else {
-				handlerResponse = handler.GetResponseMessage()
-			}
-		}
-
-		_, _ = botapi.Send(composeTelegramResponse(&update, handlerResponse))
+		_, _ = botapi.Send(composeTelegramResponse(&update, getHandlerResponse(update.Message, &u)))
 	}
 }
 
@@ -85,4 +71,18 @@ func composeTelegramResponse(update *tgbotapi.Update, responseMsg string) tgbota
 	)
 
 	return response
+}
+
+func getHandlerResponse(msg *tgbotapi.Message, u *user.User) string {
+	handler, err := handlers.InitHandler(msg, u)
+
+	if err != nil {
+		return unrecognizedCommand
+	}
+
+	if err := handler.Process(); err != nil {
+		return fmt.Sprintf("Error: %v", err)
+	} else {
+		return handler.GetResponseMessage()
+	}
 }
