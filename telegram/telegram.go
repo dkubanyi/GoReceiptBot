@@ -56,29 +56,33 @@ func listen(botapi *tgbotapi.BotAPI) {
 
 		handler, err := handlers.InitHandler(update.Message, &u)
 
-		var responseMessage string
+		var handlerResponse string
 
 		if err != nil {
-			responseMessage = unrecognizedCommand
+			handlerResponse = unrecognizedCommand
 		} else {
 			if err := handler.Process(); err != nil {
-				responseMessage = fmt.Sprintf("Error: %v", err)
+				handlerResponse = fmt.Sprintf("Error: %v", err)
 			} else {
-				responseMessage = handler.GetResponseMessage()
+				handlerResponse = handler.GetResponseMessage()
 			}
 		}
 
-		response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMessage)
-		response.ParseMode = tgbotapi.ModeHTML
-		response.ReplyToMessageID = update.Message.MessageID
-		response.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton(handlers.CommandStart),
-				tgbotapi.NewKeyboardButton(handlers.CommandMe),
-				tgbotapi.NewKeyboardButton(handlers.CommandShowReceipts),
-			),
-		)
-
-		_, _ = botapi.Send(response)
+		_, _ = botapi.Send(composeTelegramResponse(&update, handlerResponse))
 	}
+}
+
+func composeTelegramResponse(update *tgbotapi.Update, responseMsg string) tgbotapi.MessageConfig {
+	response := tgbotapi.NewMessage(update.Message.Chat.ID, responseMsg)
+	response.ParseMode = tgbotapi.ModeHTML
+	response.ReplyToMessageID = update.Message.MessageID
+	response.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(handlers.CommandStart),
+			tgbotapi.NewKeyboardButton(handlers.CommandMe),
+			tgbotapi.NewKeyboardButton(handlers.CommandShowReceipts),
+		),
+	)
+
+	return response
 }

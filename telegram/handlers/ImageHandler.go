@@ -52,8 +52,8 @@ func (h *imageHandler) Process() error {
 	}
 
 	tgResponse := new(models.TelegramResponse)
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&tgResponse)
-	if err != nil {
+
+	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&tgResponse); err != nil {
 		log.Print(err)
 		return errors.New("failed to decode QR code")
 	}
@@ -129,7 +129,7 @@ func recognizeFile(path string) (*models.FinancnaSpravaResponse, error) {
 	file, _ := os.Open(path)
 	img, _, err := image.Decode(file)
 
-	if err != nil { // img == nil
+	if err != nil {
 		log.Printf("Could not decode image: %v", err)
 		return nil, errors.New("could not decode image")
 	}

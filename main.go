@@ -5,7 +5,7 @@ import (
 	"GoBudgetBot/models"
 	"GoBudgetBot/telegram"
 	"database/sql"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,9 +13,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		panic("Error loading .env file")
 	}
 
@@ -27,7 +25,7 @@ func main() {
 
 func createConnection() *sql.DB {
 	// Open the connection
-	fmt.Println("Attempting to establish connection...")
+	log.Println("Attempting to establish connection...")
 	db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
 
 	if err != nil {
@@ -35,14 +33,12 @@ func createConnection() *sql.DB {
 	}
 
 	// check the connection
-	err = db.Ping()
-
-	if err != nil {
-		fmt.Println("Connection failed")
+	if err = db.Ping(); err != nil {
+		log.Println("Connection failed")
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected!")
+	log.Println("Successfully connected!")
 
 	// return the connection
 	return db
